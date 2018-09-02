@@ -1,0 +1,6 @@
+call:
+    pushq %rip
+    movq <id>, %rip
+
+ret:
+    popq %rip
