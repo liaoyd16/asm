@@ -1,76 +1,70 @@
 
+.data
+ifname:
+    .ascii "input.txt"
+    len = .-ifname
+ofname:
+    .ascii "output.txt"
+    len = .-ofname
+
+
 .text
 .globl _start
 _start:
-    # input: argv[1], argv[2]
+################################
 
-    ##############################
-    # get fd
-    # argv[1], rw -> fd1
-    # argv[2], rw -> fd2
-        # argv[1]: %rsp->%rdi
-        # argv[2]: %rsp->%rdi
-        # rw: %rsi
-        # fd1: %r8
-        # fd2: %r9
-
-    popq %rdi
-
-    popq %rdi
-    movq $000000, %rsi #read only
+input:
+    movq $ifname, %rdi #read only
+    movq $000000, %rsi
     call get_fd
     movq %rax, %r8
 
-    popq %rdi
-    movq $000001, %rsi #write only
+output:
+    movq $ofname, %rdi #write only
+    movq $000001, %rsi
     call get_fd
     movq %rax, %r9
 
-
-    # get line num 
-    # fd1 -> num
-        # fd1: %rdi
-        # num: %rax
-
+get_line_number:
     movq %r8, %rdi
     call get_line_num
 
-
-    # print line num
-    # num / fd2 -> .
-        # num: %rdi
-        # fd2: %rsi
+print_integer:
     movq %rax, %rdi
+    movq %r9, %rsi
     call print_int
 
 
-    ##############################
-    # get line:
-    # fd / store, size -> len
-        # fd: %rdi
-        # store: %rsi
-        # size: %rdx
+################################
 
-    movq %r8, %rdi
-    movq $512, %rdx
+print_lines:
 
-    call get_line
+    get_lines:          #; -> rax, rbx
+        movq %r8, %rdi
+        movq $512, %rsi # <=512
+        call get_line
+        movq %rax, %rdx
+        movq %rbx, %rbp
 
+    print_int:
+        movq %rdx, %rdi
+        movq $1, %rsi
+        call print_int
 
-    # print_int
-    # x -> .
-        # x: %rdi
+    print_a_line:
+        movq $1, %rax
+        movq $1, %rdi
+        movq %rbp, %rsi
+        #;movq %rdx, %rdx
+        syscall
 
-    movq %rax, %rdi
-    call print_int
+    check:
+        testq $-1, %rdi
+        jne print_lines
 
+################################
 
-    # print first line
-    # line -> .
-        # line: %rsi
-        # %rax = $1
-
-    movq $1, %rax
-    movq %rdi, %rdx
-    movq $1, %rdi
+exit:
+    movq $60, %rax
+    movq $0, %rdi
     syscall
